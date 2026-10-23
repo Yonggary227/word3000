@@ -109,8 +109,7 @@ export default function Home() {
 
         <Text style={[styles.note, { color: t.muted }]}>
           진도는 이 휴대폰에만 저장됩니다. 앱을 지우거나 다른 기기에서는 처음부터 시작해요.{'\n'}
-          출처: Paul Nation BNC/COCA 1k~3k 목록. 한글 뜻, 예문, 예문 번역은 원본에 없던 내용으로,
-          Claude가 대표 의미 위주로 작성했어요.
+          출처: Paul Nation BNC/COCA 1k~3k 목록.
         </Text>
       </ScrollView>
     </SafeAreaView>
