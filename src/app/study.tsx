@@ -125,8 +125,9 @@ export default function Study() {
       onMoveShouldSetPanResponderCapture: (_, g) => Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
       onPanResponderMove: (_, g) => drag.setValue(g.dx),
       onPanResponderRelease: (_, g) => {
-        if (g.dx > SWIPE_DISTANCE) actions.current.know();
-        else if (g.dx < -SWIPE_DISTANCE) actions.current.again();
+        // 오른손 엄지로 넘기기 쉽게: 왼쪽 = 외웠어요, 오른쪽 = 다시 볼게요
+        if (g.dx < -SWIPE_DISTANCE) actions.current.know();
+        else if (g.dx > SWIPE_DISTANCE) actions.current.again();
         else Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start();
       },
       onPanResponderTerminate: () => Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start(),
@@ -195,8 +196,8 @@ export default function Study() {
                 pointerEvents="none"
                 style={[
                   styles.swipeTag,
-                  styles.swipeTagLeft,
-                  { backgroundColor: t.band[1], opacity: drag.interpolate({ inputRange: [10, SWIPE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp' }) },
+                  styles.swipeTagRight,
+                  { backgroundColor: t.band[1], opacity: drag.interpolate({ inputRange: [-SWIPE_DISTANCE, -10], outputRange: [1, 0], extrapolate: 'clamp' }) },
                 ]}
               >
                 <Text style={[styles.swipeTagText, { color: t.onBand }]}>{review ? '계속 기억해요' : '외웠어요'} ✓</Text>
@@ -205,15 +206,15 @@ export default function Study() {
                 pointerEvents="none"
                 style={[
                   styles.swipeTag,
-                  styles.swipeTagRight,
-                  { backgroundColor: t.band[2], opacity: drag.interpolate({ inputRange: [-SWIPE_DISTANCE, -10], outputRange: [1, 0], extrapolate: 'clamp' }) },
+                  styles.swipeTagLeft,
+                  { backgroundColor: t.band[2], opacity: drag.interpolate({ inputRange: [10, SWIPE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp' }) },
                 ]}
               >
                 <Text style={[styles.swipeTagText, { color: t.onBand }]}>↺ {review ? '잊어버렸어요' : '다시 볼게요'}</Text>
               </Animated.View>
             </Animated.View>
             <Text style={[styles.swipeHint, { color: t.muted }]}>
-              ← 밀면 {review ? '잊어버렸어요' : '다시 볼게요'}   ·   밀면 {review ? '계속 기억해요' : '외웠어요'} →
+              ← 밀면 {review ? '계속 기억해요' : '외웠어요'}   ·   밀면 {review ? '잊어버렸어요' : '다시 볼게요'} →
             </Text>
 
             <View style={styles.actions}>

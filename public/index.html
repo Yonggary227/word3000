@@ -39,10 +39,13 @@
       }
     </style>
     <script>
-      // 한 번 열면 앱 내용을 휴대폰에 저장해 두고, 다음부터는 인터넷 없이도 열리게 한다
+      // 한 번 열면 앱 내용을 휴대폰에 저장해 두고, 다음부터는 인터넷 없이도 열리게 한다.
+      // 첫 화면이 뜨는 데 방해되지 않도록 3초 뒤에 저장을 시작한다.
       if ('serviceWorker' in navigator && location.pathname.startsWith('/word3000')) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/word3000/sw.js', { scope: '/word3000/' });
+          setTimeout(function () {
+            navigator.serviceWorker.register('/word3000/sw.js', { scope: '/word3000/' });
+          }, 3000);
         });
       }
     </script>
