@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "word3000",
+    "name": "단어 3000",
     "slug": "word3000",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -20,6 +20,26 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#E6EBF1",
+          "dark": {
+            "backgroundColor": "#10161F"
+          },
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120
+        }
+      ]
+    ],
+    "scheme": "word3000",
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
