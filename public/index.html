@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <title>%WEB_TITLE%</title>
+    <!-- 홈 화면에 추가했을 때 앱처럼 보이게 하는 설정 (주소는 GitHub Pages의 /word3000 기준) -->
+    <link rel="manifest" href="/word3000/manifest.json" />
+    <link rel="apple-touch-icon" href="/word3000/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="단어 3000" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#E6EBF1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#10161F" media="(prefers-color-scheme: dark)" />
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+        background-color: #E6EBF1;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #10161F;
+        }
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <script>
+      // 한 번 열면 앱 내용을 휴대폰에 저장해 두고, 다음부터는 인터넷 없이도 열리게 한다
+      if ('serviceWorker' in navigator && location.pathname.startsWith('/word3000')) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/word3000/sw.js', { scope: '/word3000/' });
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>
