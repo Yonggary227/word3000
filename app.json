@@ -23,12 +23,6 @@
       "output": "single"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "asyncRoutes": false
-        }
-      ],
       "expo-status-bar",
       "expo-font",
       [
@@ -45,7 +39,6 @@
     ],
     "scheme": "word3000",
     "experiments": {
-      "typedRoutes": true,
       "baseUrl": "/word3000"
     }
   }

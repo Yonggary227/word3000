@@ -1,5 +1,4 @@
 import * as Speech from 'expo-speech';
-import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Animated,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useNav } from '@/lib/nav';
 import { useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
 import { WORD_BY_ID, WORDS, type Band, type Word } from '@/lib/words';
@@ -33,12 +33,11 @@ function speak(text: string) {
   Speech.speak(text, { language: 'en-US', rate: 0.9 });
 }
 
-export default function Study() {
+export default function Study({ band: bandProp, review = false }: { band?: Band; review?: boolean }) {
   const t = useTheme();
   const { height, width } = useWindowDimensions();
-  const params = useLocalSearchParams<{ band?: string; review?: string }>();
-  const review = params.review === '1';
-  const band = (review ? 0 : Number(params.band) || 1) as Band | 0;
+  const band: Band | 0 = review ? 0 : (bandProp ?? 1);
+  const { back } = useNav();
   const { done, options, setDone } = useStore();
 
   const buildDeck = () => {
@@ -144,7 +143,7 @@ export default function Study() {
       <View style={styles.wrap}>
         <View style={styles.top}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={back}
             style={[styles.iconBtn, { backgroundColor: t.surface, borderColor: t.line }]}
             accessibilityRole="button"
             accessibilityLabel="처음 화면으로"
@@ -246,6 +245,7 @@ export default function Study() {
             deckLength={deck.length}
             left={review ? 0 : WORDS.filter((w) => w.band === band && !done.has(w.id)).length}
             onRestart={restart}
+            onHome={back}
           />
         )}
       </View>
@@ -393,6 +393,7 @@ function Finished({
   deckLength,
   left,
   onRestart,
+  onHome,
 }: {
   t: Theme;
   review: boolean;
@@ -400,6 +401,7 @@ function Finished({
   deckLength: number;
   left: number;
   onRestart: () => void;
+  onHome: () => void;
 }) {
   let title: string;
   let body: string;
@@ -418,7 +420,7 @@ function Finished({
       <Text style={[styles.emptyTitle, { color: t.ink }]}>{title}</Text>
       <Text style={[styles.emptyBody, { color: t.muted }]}>{body}</Text>
       <Pressable
-        onPress={canContinue ? onRestart : () => router.back()}
+        onPress={canContinue ? onRestart : onHome}
         style={[styles.big, { backgroundColor: t.accent, alignSelf: 'stretch', flex: 0 }]}
         accessibilityRole="button"
       >

@@ -1,8 +1,8 @@
-import { router } from 'expo-router';
 import { memo, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useNav } from '@/lib/nav';
 import { useStore } from '@/lib/store';
 import { useTheme, type Theme } from '@/lib/theme';
 import { WORDS, type Word } from '@/lib/words';
@@ -20,6 +20,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 export default function Search() {
   const t = useTheme();
   const { done, setDone } = useStore();
+  const { back } = useNav();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const insets = useSafeAreaInsets();
@@ -41,7 +42,7 @@ export default function Search() {
       <View style={styles.wrap}>
         <View style={styles.top}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={back}
             style={[styles.iconBtn, { backgroundColor: t.surface, borderColor: t.line }]}
             accessibilityRole="button"
             accessibilityLabel="처음 화면으로"

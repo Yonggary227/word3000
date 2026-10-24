@@ -16,12 +16,17 @@ function walk(dir) {
 }
 
 // 글꼴은 원래 앱 코드가 실행된 뒤에야 받기 시작하므로, 앱 코드와 동시에 받도록 미리 알려준다
-const fontLinks = walk(join(dist, 'assets'))
+// 미리 그린 첫 화면(#boot)도 같은 글꼴을 쓰도록 @font-face를 함께 넣는다
+const fonts = walk(join(dist, 'assets'))
   .filter((f) => f.endsWith('.ttf'))
-  .map((f) => `<link rel="preload" href="/word3000/${relative(dist, f).split(sep).join('/')}" as="font" type="font/ttf" crossorigin>`)
-  .join('');
+  .map((f) => ({ url: `/word3000/${relative(dist, f).split(sep).join('/')}`, family: f.split(sep).pop().split('.')[0] }));
+const fontLinks = fonts.map((f) => `<link rel="preload" href="${f.url}" as="font" type="font/ttf" crossorigin>`).join('');
+const fontFaces = fonts.map((f) => `@font-face{font-family:${f.family};src:url(${f.url}) format("truetype");font-display:swap}`).join('');
 const indexPath = join(dist, 'index.html');
-writeFileSync(indexPath, readFileSync(indexPath, 'utf8').replace('</head>', `${fontLinks}</head>`));
+writeFileSync(
+  indexPath,
+  readFileSync(indexPath, 'utf8').replace('</head>', `${fontLinks}<style>${fontFaces}</style></head>`),
+);
 
 // 주소에 없는 페이지(/word3000/study 등)를 새로고침해도 앱이 열리도록
 copyFileSync(indexPath, join(dist, '404.html'));

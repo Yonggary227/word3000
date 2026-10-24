@@ -1,8 +1,8 @@
-import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Seg } from '@/components/Seg';
+import { useNav } from '@/lib/nav';
 import { useStore } from '@/lib/store';
 import { fonts, useTheme } from '@/lib/theme';
 import { BANDS, WORDS } from '@/lib/words';
@@ -10,6 +10,7 @@ import { BANDS, WORDS } from '@/lib/words';
 export default function Home() {
   const t = useTheme();
   const { done, options, setOption } = useStore();
+  const { push } = useNav();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }}>
@@ -28,7 +29,7 @@ export default function Home() {
             return (
               <Pressable
                 key={band}
-                onPress={() => router.push({ pathname: '/study', params: { band: String(band) } })}
+                onPress={() => push({ name: 'study', band })}
                 accessibilityRole="button"
                 accessibilityLabel={`${band}k ${name} 시작, ${d}개 외움`}
                 style={({ pressed }) => [
@@ -92,14 +93,14 @@ export default function Home() {
 
         <View style={styles.linkRow}>
           <Pressable
-            onPress={() => router.push('/search')}
+            onPress={() => push({ name: 'search' })}
             style={[styles.ghost, { borderColor: t.line }]}
             accessibilityRole="button"
           >
             <Text style={[styles.ghostText, { color: t.ink }]}>단어 찾기</Text>
           </Pressable>
           <Pressable
-            onPress={() => router.push({ pathname: '/study', params: { review: '1' } })}
+            onPress={() => push({ name: 'study', review: true })}
             style={[styles.ghost, { borderColor: t.line }]}
             accessibilityRole="button"
           >
