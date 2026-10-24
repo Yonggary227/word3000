@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useNav } from '@/lib/nav';
+import { speak } from '@/lib/speech';
 import { useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
 import { WORD_BY_ID, WORDS, type Band, type Word } from '@/lib/words';
@@ -27,11 +28,6 @@ function shuffle<T>(a: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-function speak(text: string) {
-  Speech.stop();
-  Speech.speak(text, { language: 'en-US', rate: 0.9 });
 }
 
 export default function Study({ band: bandProp, review = false }: { band?: Band; review?: boolean }) {
@@ -303,9 +299,10 @@ function Face({
 }
 
 function SayButton({ label, text, t }: { label: string; text: string; t: Theme }) {
+  const { options } = useStore();
   return (
     <Pressable
-      onPress={() => speak(text)}
+      onPress={() => speak(text, options.voice)}
       style={[styles.say, { borderColor: t.line }]}
       accessibilityRole="button"
       hitSlop={6}

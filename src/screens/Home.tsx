@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Seg } from '@/components/Seg';
+import { VoicePicker } from '@/components/VoicePicker';
 import { useNav } from '@/lib/nav';
 import { useStore } from '@/lib/store';
 import { fonts, useTheme } from '@/lib/theme';
@@ -88,6 +89,10 @@ export default function Home() {
                 { value: 'ko', label: '한글 뜻' },
               ]}
             />
+          </View>
+          <View style={styles.opt}>
+            <Text style={[styles.optLabel, { color: t.ink }]}>발음 목소리</Text>
+            <VoicePicker />
           </View>
         </View>
 

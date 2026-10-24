@@ -72,6 +72,7 @@
       #boot .seg { display: flex; border: 1px solid var(--line); border-radius: 12px; padding: 3px; background: var(--surface); }
       #boot .seg span { padding: 7px 12px; border-radius: 9px; font-size: 13px; color: var(--muted); }
       #boot .seg span.on { background: var(--accent); color: var(--onaccent); font-weight: 700; }
+      #boot .pill { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 13px; background: var(--surface); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       #boot .links { margin-top: 24px; display: flex; gap: 10px; }
       #boot .ghost { flex: 1; border: 1px solid var(--line); border-radius: 14px; padding: 13px; text-align: center; font-size: 14px; font-weight: 500; }
       #boot .note { font-size: 12px; line-height: 19px; margin-top: 22px; color: var(--muted); }
@@ -107,6 +108,7 @@
           <div class="opt">보여줄 단어<div class="seg" data-opt="scope"><span data-v="left">안 외운 것</span><span data-v="all">전체</span></div></div>
           <div class="opt">순서<div class="seg" data-opt="order"><span data-v="shuffle">섞기</span><span data-v="abc">알파벳순</span></div></div>
           <div class="opt">먼저 보여줄 면<div class="seg" data-opt="front"><span data-v="en">영어</span><span data-v="ko">한글 뜻</span></div></div>
+          <div class="opt">발음 목소리<div class="pill" data-voice>기본 ›</div></div>
         </div>
         <div class="links"><div class="ghost">단어 찾기</div><div class="ghost">외운 단어 복습</div></div>
         <p class="note">진도는 이 휴대폰에만 저장됩니다. 앱을 지우거나 다른 기기에서는 처음부터 시작해요.<br />출처: Paul Nation BNC/COCA 1k~3k 목록.</p>
@@ -125,6 +127,7 @@
           document.querySelector('[data-bar="' + b + '"]').style.width = p + '%';
         });
         var opts = { scope: st.scope === 'all' ? 'all' : 'left', order: st.order === 'abc' ? 'abc' : 'shuffle', front: st.front === 'ko' ? 'ko' : 'en' };
+        if (typeof st.voiceName === 'string') document.querySelector('[data-voice]').textContent = st.voiceName + ' ›';
         Object.keys(opts).forEach(function (k) {
           var on = document.querySelector('[data-opt="' + k + '"] [data-v="' + opts[k] + '"]');
           if (on) on.className = 'on';

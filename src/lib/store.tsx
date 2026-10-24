@@ -8,9 +8,12 @@ export type Options = {
   scope: 'left' | 'all';
   order: 'shuffle' | 'abc';
   front: 'en' | 'ko';
+  // 발음 목소리 (null이면 기기 기본 목소리)
+  voice: string | null;
+  voiceName: string | null;
 };
 
-const DEFAULT_OPTIONS: Options = { scope: 'left', order: 'shuffle', front: 'en' };
+const DEFAULT_OPTIONS: Options = { scope: 'left', order: 'shuffle', front: 'en', voice: null, voiceName: null };
 
 type Store = {
   loaded: boolean;
@@ -37,6 +40,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           scope: saved.scope === 'all' ? 'all' : 'left',
           order: saved.order === 'abc' ? 'abc' : 'shuffle',
           front: saved.front === 'ko' ? 'ko' : 'en',
+          voice: typeof saved.voice === 'string' ? saved.voice : null,
+          voiceName: typeof saved.voiceName === 'string' ? saved.voiceName : null,
         });
       })
       .catch(() => {})
