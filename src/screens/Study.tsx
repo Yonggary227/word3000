@@ -8,6 +8,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  type TextStyle,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -18,7 +19,7 @@ import { useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
 import { WORD_BY_ID, WORDS, type Band, type Word } from '@/lib/words';
 
-const SWIPE_DISTANCE = 70;
+const NO_LIGATURES: TextStyle['fontVariant'] = ['no-common-ligatures', 'no-discretionary-ligatures'];
 
 function shuffle<T>(a: T[]): T[] {
   for (let i = a.length - 1; i > 0; i--) {
@@ -36,6 +37,8 @@ function speak(text: string) {
 export default function Study({ band: bandProp, review = false }: { band?: Band; review?: boolean }) {
   const t = useTheme();
   const { height, width } = useWindowDimensions();
+  // 카드 너비의 약 1/3 이상 밀어야 넘어간다 (조금 밀다 놓으면 제자리로)
+  const swipeDistance = Math.max(110, Math.min(width, 480) * 0.33);
   const band: Band | 0 = review ? 0 : (bandProp ?? 1);
   const { back } = useNav();
   const { done, options, setDone } = useStore();
@@ -117,16 +120,16 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
   };
 
   // 스와이프 처리기는 한 번만 만들고, 최신 동작은 ref로 넘겨준다
-  const actions = useRef({ know, again });
-  actions.current = { know, again };
+  const actions = useRef({ know, again, swipeDistance });
+  actions.current = { know, again, swipeDistance };
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponderCapture: (_, g) => Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
       onPanResponderMove: (_, g) => drag.setValue(g.dx),
       onPanResponderRelease: (_, g) => {
         // 오른손 엄지로 넘기기 쉽게: 왼쪽 = 외웠어요, 오른쪽 = 다시 볼게요
-        if (g.dx < -SWIPE_DISTANCE) actions.current.know();
-        else if (g.dx > SWIPE_DISTANCE) actions.current.again();
+        if (g.dx < -actions.current.swipeDistance) actions.current.know();
+        else if (g.dx > actions.current.swipeDistance) actions.current.again();
         else Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start();
       },
       onPanResponderTerminate: () => Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start(),
@@ -196,7 +199,7 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
                 style={[
                   styles.swipeTag,
                   styles.swipeTagRight,
-                  { backgroundColor: t.band[1], opacity: drag.interpolate({ inputRange: [-SWIPE_DISTANCE, -10], outputRange: [1, 0], extrapolate: 'clamp' }) },
+                  { backgroundColor: t.band[1], opacity: drag.interpolate({ inputRange: [-swipeDistance, -10], outputRange: [1, 0], extrapolate: 'clamp' }) },
                 ]}
               >
                 <Text style={[styles.swipeTagText, { color: t.onBand }]}>{review ? '계속 기억해요' : '외웠어요'} ✓</Text>
@@ -206,7 +209,7 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
                 style={[
                   styles.swipeTag,
                   styles.swipeTagLeft,
-                  { backgroundColor: t.band[2], opacity: drag.interpolate({ inputRange: [10, SWIPE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp' }) },
+                  { backgroundColor: t.band[2], opacity: drag.interpolate({ inputRange: [10, swipeDistance], outputRange: [0, 1], extrapolate: 'clamp' }) },
                 ]}
               >
                 <Text style={[styles.swipeTagText, { color: t.onBand }]}>↺ {review ? '잊어버렸어요' : '다시 볼게요'}</Text>
@@ -325,7 +328,7 @@ function EnglishFront({ word, done, t, width }: CardProps & { done: boolean }) {
     <>
       {done && <DoneMark t={t} />}
       <Text
-        style={[styles.word, { color: t.ink, fontSize: wordSize(width), lineHeight: wordSize(width) * 1.15 }]}
+        style={[styles.word, { color: t.ink, fontSize: wordSize(width), lineHeight: wordSize(width) * 1.35 }]}
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.5}
@@ -369,7 +372,7 @@ function KoreanBack({ word, t, width }: CardProps) {
   return (
     <>
       <Text
-        style={[styles.word, { color: t.ink, fontSize: size, lineHeight: size * 1.15 }]}
+        style={[styles.word, { color: t.ink, fontSize: size, lineHeight: size * 1.35 }]}
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.5}
@@ -457,10 +460,11 @@ const styles = StyleSheet.create({
   },
   strip: { position: 'absolute', left: 0, top: 22, bottom: 22, width: 5, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
   doneMark: { position: 'absolute', top: 18, right: 18, fontSize: 12, fontWeight: '700' },
-  word: { fontFamily: fonts.serif, letterSpacing: -1, textAlign: 'center' },
-  wSmall: { fontFamily: fonts.serifSemi, fontSize: 22, textAlign: 'center' },
+  // 영어 글자는 합자(fi, ff 등이 한 글자로 붙는 것)를 꺼서 철자가 그대로 보이게 한다
+  word: { fontFamily: fonts.serif, letterSpacing: -1, textAlign: 'center', fontVariant: NO_LIGATURES },
+  wSmall: { fontFamily: fonts.serifSemi, fontSize: 22, textAlign: 'center', fontVariant: NO_LIGATURES },
   mean: { fontWeight: '700', textAlign: 'center', marginTop: 10, marginBottom: 22 },
-  ex: { fontFamily: fonts.serifSemi, fontSize: 19, lineHeight: 28, textAlign: 'center', maxWidth: 320 },
+  ex: { fontFamily: fonts.serifSemi, fontSize: 19, lineHeight: 28, textAlign: 'center', maxWidth: 320, fontVariant: NO_LIGATURES },
   exKo: { fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 6, maxWidth: 320 },
   say: { marginTop: 18, borderWidth: 1, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 16 },
   hint: { position: 'absolute', bottom: 20, fontSize: 12 },
