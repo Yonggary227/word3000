@@ -54,27 +54,31 @@
         }
       }
       #boot * { box-sizing: border-box; margin: 0; }
-      #boot .wrap { max-width: 480px; margin: 0 auto; padding: 20px 18px 32px; }
+      #boot .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px 40px; }
       #boot .serif { font-family: Fraunces_700Bold, Georgia, serif; font-weight: normal; }
-      #boot .title { font-size: 44px; line-height: 50px; letter-spacing: -0.8px; margin: 18px 0 6px; }
-      #boot .sub { font-size: 14px; line-height: 21px; color: var(--muted); margin-bottom: 26px; }
-      #boot .bands { display: flex; flex-direction: column; gap: 12px; }
+      #boot .title { font-size: 40px; line-height: 46px; letter-spacing: -0.8px; margin-top: 8px; }
+      #boot .sub { font-size: 14px; line-height: 20px; color: var(--muted); margin: 4px 0 24px; }
+      #boot .bands { display: flex; flex-direction: column; gap: 10px; }
       #boot .band { display: flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 18px; padding: 16px; background: var(--surface); }
-      #boot .k { font-size: 30px; width: 64px; flex: none; }
+      #boot .k { font-size: 28px; line-height: 34px; width: 48px; flex: none; }
       #boot .grow { flex: 1; }
-      #boot .name { font-weight: 700; font-size: 15px; }
-      #boot .meta { font-size: 13px; margin-top: 3px; color: var(--muted); }
-      #boot .bar { height: 6px; border-radius: 3px; margin-top: 9px; overflow: hidden; background: var(--line); }
+      #boot .top { display: flex; justify-content: space-between; align-items: center; }
+      #boot .name { font-weight: 700; font-size: 16px; line-height: 22px; }
+      #boot .prog { font-size: 13px; line-height: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      #boot .bar { height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden; background: var(--line); }
       #boot .bar i { display: block; height: 100%; width: 0; border-radius: 3px; }
-      #boot .go { font-size: 13px; font-weight: 700; color: var(--muted); }
-      #boot .opts { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
-      #boot .opt { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      #boot .section { font-size: 13px; line-height: 18px; font-weight: 700; color: var(--muted); margin: 28px 0 8px 4px; }
+      #boot .group { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); }
+      #boot .sep { height: 1px; margin-left: 16px; background: var(--line); }
+      #boot .row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 16px; }
+      #boot .label { flex: 1; font-size: 15px; line-height: 21px; }
+      #boot .hint { display: block; font-size: 12px; line-height: 16px; margin-top: 2px; color: var(--muted); }
+      #boot .count { font-size: 14px; line-height: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      #boot .chev { font-size: 20px; line-height: 22px; margin-left: -4px; color: var(--muted); }
       #boot .seg { display: flex; border: 1px solid var(--line); border-radius: 12px; padding: 3px; background: var(--surface); }
       #boot .seg span { padding: 7px 12px; border-radius: 9px; font-size: 13px; color: var(--muted); }
       #boot .seg span.on { background: var(--accent); color: var(--onaccent); font-weight: 700; }
-      #boot .links { margin-top: 24px; display: flex; gap: 10px; }
-      #boot .ghost { flex: 1; border: 1px solid var(--line); border-radius: 14px; padding: 13px; text-align: center; font-size: 14px; font-weight: 500; }
-      #boot .note { font-size: 12px; line-height: 19px; margin-top: 22px; color: var(--muted); }
+      #boot .note { font-size: 12px; line-height: 18px; margin-top: 24px; color: var(--muted); text-align: center; }
     </style>
     <script>
       // 한 번 열면 앱 내용을 휴대폰에 저장해 두고, 다음부터는 인터넷 없이도 열리게 한다.
@@ -97,19 +101,29 @@
     <div id="boot" aria-hidden="true">
       <div class="wrap">
         <h1 class="title serif">단어 3000</h1>
-        <p class="sub">가장 자주 쓰이는 영어 단어 3,000개.<br />카드를 눌러 뜻을 확인하고, 외운 단어는 넘겨두세요.</p>
+        <p class="sub">가장 자주 쓰이는 영어 단어 3,000개</p>
         <div class="bands">
-          <div class="band"><span class="k serif" style="color: var(--b1)">1k</span><div class="grow"><div class="name">기초 1,000단어</div><div class="meta" data-meta="1">0개 외움 · 0%</div><div class="bar"><i data-bar="1" style="background: var(--b1)"></i></div></div><span class="go">시작</span></div>
-          <div class="band"><span class="k serif" style="color: var(--b2)">2k</span><div class="grow"><div class="name">초급 1,000단어</div><div class="meta" data-meta="2">0개 외움 · 0%</div><div class="bar"><i data-bar="2" style="background: var(--b2)"></i></div></div><span class="go">시작</span></div>
-          <div class="band"><span class="k serif" style="color: var(--b3)">3k</span><div class="grow"><div class="name">초중급 1,000단어</div><div class="meta" data-meta="3">0개 외움 · 0%</div><div class="bar"><i data-bar="3" style="background: var(--b3)"></i></div></div><span class="go">시작</span></div>
+          <div class="band"><span class="k serif" style="color: var(--b1)">1k</span><div class="grow"><div class="top"><span class="name">기초</span><span class="prog" data-prog="1">0 / 1,000</span></div><div class="bar"><i data-bar="1" style="background: var(--b1)"></i></div></div></div>
+          <div class="band"><span class="k serif" style="color: var(--b2)">2k</span><div class="grow"><div class="top"><span class="name">초급</span><span class="prog" data-prog="2">0 / 1,000</span></div><div class="bar"><i data-bar="2" style="background: var(--b2)"></i></div></div></div>
+          <div class="band"><span class="k serif" style="color: var(--b3)">3k</span><div class="grow"><div class="top"><span class="name">초중급</span><span class="prog" data-prog="3">0 / 1,000</span></div><div class="bar"><i data-bar="3" style="background: var(--b3)"></i></div></div></div>
         </div>
-        <div class="opts">
-          <div class="opt">보여줄 단어<div class="seg" data-opt="scope"><span data-v="left">안 외운 것</span><span data-v="all">전체</span></div></div>
-          <div class="opt">순서<div class="seg" data-opt="order"><span data-v="shuffle">섞기</span><span data-v="abc">알파벳순</span></div></div>
-          <div class="opt">먼저 보여줄 면<div class="seg" data-opt="front"><span data-v="en">영어</span><span data-v="ko">한글 뜻</span></div></div>
+        <p class="section">학습 설정</p>
+        <div class="group">
+          <div class="row"><span class="label">보여줄 단어</span><div class="seg" data-opt="scope"><span data-v="left">안 외운 것</span><span data-v="all">전체</span></div></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">순서</span><div class="seg" data-opt="order"><span data-v="shuffle">섞기</span><span data-v="abc">알파벳순</span></div></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">먼저 보여줄 면</span><div class="seg" data-opt="front"><span data-v="en">영어</span><span data-v="ko">한글 뜻</span></div></div>
         </div>
-        <div class="links"><div class="ghost">단어 찾기</div><div class="ghost">외운 단어 복습</div></div>
-        <p class="note">진도는 이 휴대폰에만 저장됩니다. 앱을 지우거나 다른 기기에서는 처음부터 시작해요.<br />출처: Paul Nation BNC/COCA 1k~3k 목록.</p>
+        <p class="section">복습</p>
+        <div class="group">
+          <div class="row"><span class="label">외운 단어 복습</span><span class="count" data-count="done">0개</span><span class="chev">›</span></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">어려운 단어 복습<span class="hint">5번 이상 헤맨 단어</span></span><span class="count" data-count="hard">0개</span><span class="chev">›</span></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">단어 찾기</span><span class="chev">›</span></div>
+        </div>
+        <p class="note">진도는 이 휴대폰에만 저장돼요 · 출처: Paul Nation BNC/COCA 1k~3k</p>
       </div>
     </div>
     <script>
@@ -117,13 +131,19 @@
       (function () {
         var st = {};
         try { st = JSON.parse(localStorage.getItem('w3000.v1') || '{}') || {}; } catch (e) {}
+        var done = st.done || [];
         var counts = { 1: 0, 2: 0, 3: 0 };
-        (st.done || []).forEach(function (id) { var b = Math.ceil(id / 1000); if (counts[b] !== undefined) counts[b]++; });
+        done.forEach(function (id) { var b = Math.ceil(id / 1000); if (counts[b] !== undefined) counts[b]++; });
         [1, 2, 3].forEach(function (b) {
           var p = Math.round((counts[b] / 1000) * 100);
-          document.querySelector('[data-meta="' + b + '"]').textContent = counts[b].toLocaleString() + '개 외움 · ' + p + '%';
+          document.querySelector('[data-prog="' + b + '"]').textContent = counts[b].toLocaleString() + ' / 1,000';
           document.querySelector('[data-bar="' + b + '"]').style.width = p + '%';
         });
+        // 어려운 단어 기준(5번)은 src/lib/store.tsx의 HARD_MIN과 같다
+        var misses = st.misses || {};
+        var hard = Object.keys(misses).filter(function (k) { return misses[k] >= 5; }).length;
+        document.querySelector('[data-count="done"]').textContent = done.length.toLocaleString() + '개';
+        document.querySelector('[data-count="hard"]').textContent = hard.toLocaleString() + '개';
         var opts = { scope: st.scope === 'all' ? 'all' : 'left', order: st.order === 'abc' ? 'abc' : 'shuffle', front: st.front === 'ko' ? 'ko' : 'en' };
         Object.keys(opts).forEach(function (k) {
           var on = document.querySelector('[data-opt="' + k + '"] [data-v="' + opts[k] + '"]');

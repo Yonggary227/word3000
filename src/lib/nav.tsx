@@ -4,7 +4,10 @@ import { BackHandler, Platform } from 'react-native';
 import type { Band } from './words';
 
 // 화면이 3개뿐이라 화면 이동 도구(Expo Router) 대신 "지금 보는 화면 목록"을 직접 관리한다
-export type Route = { name: 'home' } | { name: 'study'; band?: Band; review?: boolean } | { name: 'search' };
+export type Route =
+  | { name: 'home' }
+  | { name: 'study'; band?: Band; mode?: 'band' | 'review' | 'hard' }
+  | { name: 'search' };
 
 type Nav = {
   route: Route;

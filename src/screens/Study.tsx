@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useNav } from '@/lib/nav';
-import { useStore } from '@/lib/store';
+import { HARD_MIN, useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
 import { WORD_BY_ID, WORDS, type Band, type Word } from '@/lib/words';
 
@@ -34,16 +34,25 @@ function speak(text: string) {
   Speech.speak(text, { language: 'en-US', rate: 0.9 });
 }
 
-export default function Study({ band: bandProp, review = false }: { band?: Band; review?: boolean }) {
+export type StudyMode = 'band' | 'review' | 'hard';
+
+export default function Study({ band: bandProp, mode = 'band' }: { band?: Band; mode?: StudyMode }) {
   const t = useTheme();
   const { height, width } = useWindowDimensions();
   // 카드 너비의 약 1/3 이상 밀어야 넘어간다 (조금 밀다 놓으면 제자리로)
   const swipeDistance = Math.max(110, Math.min(width, 480) * 0.33);
-  const band: Band | 0 = review ? 0 : (bandProp ?? 1);
+  const review = mode === 'review';
+  const band: Band | 0 = mode === 'band' ? (bandProp ?? 1) : 0;
   const { back } = useNav();
-  const { done, options, setDone } = useStore();
+  const { done, misses, options, setDone, addMiss } = useStore();
 
   const buildDeck = () => {
+    if (mode === 'hard') {
+      // 많이 헤맨 단어부터
+      return WORDS.filter((w) => (misses[w.id] ?? 0) >= HARD_MIN)
+        .sort((a, b) => (misses[b.id] ?? 0) - (misses[a.id] ?? 0))
+        .map((w) => w.id);
+    }
     const pool = review
       ? WORDS.filter((w) => done.has(w.id))
       : WORDS.filter((w) => w.band === band && (options.scope === 'all' || !done.has(w.id)));
@@ -82,6 +91,7 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
 
   const again = () => {
     if (!current) return;
+    addMiss(current.id);
     if (review) {
       setDone(current.id, false);
     } else {
@@ -137,8 +147,12 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
     }),
   ).current;
 
-  const color = review ? t.accent : t.band[band as Band];
-  const chipText = review ? t.onAccent : t.onBand;
+  // 구간 학습은 구간 색, 어려운 단어는 단어마다 원래 구간 색, 복습은 기본 색
+  const color =
+    mode === 'band' ? t.band[band as Band] : mode === 'hard' && current ? t.band[current.band] : t.accent;
+  const chipBg = mode === 'band' ? t.band[band as Band] : t.accent;
+  const chipText = mode === 'band' ? t.onBand : t.onAccent;
+  const chipLabel = mode === 'band' ? `${band}k` : review ? '복습' : '어려운 단어';
   const cardHeight = Math.max(330, Math.min(height * 0.58, 440));
 
   return (
@@ -154,8 +168,8 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
             <Text style={{ color: t.ink, fontSize: 14 }}>← 목록</Text>
           </Pressable>
           <Text style={[styles.count, { color: t.muted }]}>{current ? `${pos + 1} / ${deck.length}` : ''}</Text>
-          <View style={[styles.chip, { backgroundColor: color }]}>
-            <Text style={[styles.chipText, { color: chipText }]}>{review ? '복습' : `${band}k`}</Text>
+          <View style={[styles.chip, { backgroundColor: chipBg }]}>
+            <Text style={[styles.chipText, { color: chipText }]}>{chipLabel}</Text>
           </View>
         </View>
 
@@ -179,6 +193,9 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
                 accessibilityLabel={flipped ? '카드 앞면 보기' : '카드 뒤집기'}
               >
                 <Face side="front" flip={flip} color={color} t={t} active={!flipped}>
+                  {mode === 'hard' && (
+                    <Text style={[styles.missMark, { color: t.muted }]}>{misses[current.id] ?? 0}번 헤맨 단어</Text>
+                  )}
                   {options.front === 'en' ? (
                     <EnglishFront word={current} done={done.has(current.id)} t={t} width={width} />
                   ) : (
@@ -243,10 +260,10 @@ export default function Study({ band: bandProp, review = false }: { band?: Band;
         ) : (
           <Finished
             t={t}
-            review={review}
+            mode={mode}
             band={band}
             deckLength={deck.length}
-            left={review ? 0 : WORDS.filter((w) => w.band === band && !done.has(w.id)).length}
+            left={mode === 'band' ? WORDS.filter((w) => w.band === band && !done.has(w.id)).length : 0}
             onRestart={restart}
             onHome={back}
           />
@@ -391,7 +408,7 @@ function KoreanBack({ word, t, width }: CardProps) {
 
 function Finished({
   t,
-  review,
+  mode,
   band,
   deckLength,
   left,
@@ -399,25 +416,25 @@ function Finished({
   onHome,
 }: {
   t: Theme;
-  review: boolean;
+  mode: StudyMode;
   band: Band | 0;
   deckLength: number;
   left: number;
   onRestart: () => void;
   onHome: () => void;
 }) {
-  let title: string;
-  let body: string;
-  if (deckLength === 0) {
-    title = review ? '아직 외운 단어가 없어요' : `${band}k 완료`;
-    body = review
-      ? "카드에서 '외웠어요'를 누른 단어가 여기 모입니다."
-      : "이 구간 1,000단어를 모두 외웠어요.\n'보여줄 단어'를 전체로 바꾸면 다시 볼 수 있어요.";
-  } else {
-    title = '한 바퀴 끝';
-    body = review ? '외운 단어를 모두 훑어봤어요.' : `남은 단어 ${left.toLocaleString()}개`;
-  }
-  const canContinue = deckLength > 0 && left > 0 && !review;
+  const empty = {
+    band: [`${band}k 완료`, "이 구간 1,000단어를 모두 외웠어요.\n'보여줄 단어'를 전체로 바꾸면 다시 볼 수 있어요."],
+    review: ['아직 외운 단어가 없어요', "카드에서 '외웠어요'를 누른 단어가 여기 모입니다."],
+    hard: ['어려운 단어가 없어요', `'다시 볼게요'를 ${HARD_MIN}번 이상 누른 단어가 여기 모입니다.`],
+  }[mode];
+  const lap = {
+    band: `남은 단어 ${left.toLocaleString()}개`,
+    review: '외운 단어를 모두 훑어봤어요.',
+    hard: '어려운 단어를 모두 훑어봤어요.',
+  }[mode];
+  const [title, body] = deckLength === 0 ? empty : ['한 바퀴 끝', lap];
+  const canContinue = deckLength > 0 && left > 0 && mode === 'band';
   return (
     <View style={styles.empty}>
       <Text style={[styles.emptyTitle, { color: t.ink }]}>{title}</Text>
@@ -440,6 +457,7 @@ const styles = StyleSheet.create({
   count: { fontSize: 14, fontVariant: ['tabular-nums'] },
   chip: { paddingVertical: 4, paddingHorizontal: 9, borderRadius: 999 },
   chipText: { fontSize: 12, fontWeight: '700' },
+  missMark: { position: 'absolute', top: 18, left: 22, fontSize: 12, fontWeight: '700' },
   face: {
     position: 'absolute',
     top: 0,

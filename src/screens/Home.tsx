@@ -1,26 +1,27 @@
+import { Fragment, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Seg } from '@/components/Seg';
 import { useNav } from '@/lib/nav';
-import { useStore } from '@/lib/store';
-import { fonts, useTheme } from '@/lib/theme';
+import { HARD_MIN, useStore } from '@/lib/store';
+import { fonts, useTheme, type Theme } from '@/lib/theme';
 import { BANDS, WORDS } from '@/lib/words';
 
+// public/index.html의 미리 그린 첫 화면(#boot)이 이 화면과 같은 모양이다. 바꿀 때 함께 바꾼다.
 export default function Home() {
   const t = useTheme();
-  const { done, options, setOption } = useStore();
+  const { done, misses, options, setOption } = useStore();
   const { push } = useNav();
+  const hardCount = Object.values(misses).filter((n) => n >= HARD_MIN).length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={styles.wrap}>
         <Text style={[styles.title, { color: t.ink }]}>단어 3000</Text>
-        <Text style={[styles.sub, { color: t.muted }]}>
-          가장 자주 쓰이는 영어 단어 3,000개.{'\n'}카드를 눌러 뜻을 확인하고, 외운 단어는 넘겨두세요.
-        </Text>
+        <Text style={[styles.sub, { color: t.muted }]}>가장 자주 쓰이는 영어 단어 3,000개</Text>
 
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 10 }}>
           {BANDS.map(({ band, name }) => {
             const all = WORDS.filter((w) => w.band === band);
             const d = all.filter((w) => done.has(w.id)).length;
@@ -39,25 +40,24 @@ export default function Home() {
               >
                 <Text style={[styles.k, { color }]}>{band}k</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.name, { color: t.ink }]}>
-                    {name} {all.length.toLocaleString()}단어
-                  </Text>
-                  <Text style={[styles.meta, { color: t.muted }]}>
-                    {d.toLocaleString()}개 외움 · {p}%
-                  </Text>
+                  <View style={styles.bandTop}>
+                    <Text style={[styles.name, { color: t.ink }]}>{name}</Text>
+                    <Text style={[styles.progress, { color: t.muted }]}>
+                      {d.toLocaleString()} / {all.length.toLocaleString()}
+                    </Text>
+                  </View>
                   <View style={[styles.bar, { backgroundColor: t.line }]}>
                     <View style={[styles.barFill, { width: `${p}%`, backgroundColor: color }]} />
                   </View>
                 </View>
-                <Text style={[styles.go, { color: t.muted }]}>시작</Text>
               </Pressable>
             );
           })}
         </View>
 
-        <View style={styles.opts}>
-          <View style={styles.opt}>
-            <Text style={[styles.optLabel, { color: t.ink }]}>보여줄 단어</Text>
+        <Text style={[styles.section, { color: t.muted }]}>학습 설정</Text>
+        <Group t={t}>
+          <Row t={t} label="보여줄 단어">
             <Seg
               value={options.scope}
               onChange={(v) => setOption('scope', v)}
@@ -66,9 +66,8 @@ export default function Home() {
                 { value: 'all', label: '전체' },
               ]}
             />
-          </View>
-          <View style={styles.opt}>
-            <Text style={[styles.optLabel, { color: t.ink }]}>순서</Text>
+          </Row>
+          <Row t={t} label="순서">
             <Seg
               value={options.order}
               onChange={(v) => setOption('order', v)}
@@ -77,9 +76,8 @@ export default function Home() {
                 { value: 'abc', label: '알파벳순' },
               ]}
             />
-          </View>
-          <View style={styles.opt}>
-            <Text style={[styles.optLabel, { color: t.ink }]}>먼저 보여줄 면</Text>
+          </Row>
+          <Row t={t} label="먼저 보여줄 면">
             <Seg
               value={options.front}
               onChange={(v) => setOption('front', v)}
@@ -88,58 +86,100 @@ export default function Home() {
                 { value: 'ko', label: '한글 뜻' },
               ]}
             />
-          </View>
-        </View>
+          </Row>
+        </Group>
 
-        <View style={styles.linkRow}>
-          <Pressable
-            onPress={() => push({ name: 'search' })}
-            style={[styles.ghost, { borderColor: t.line }]}
-            accessibilityRole="button"
-          >
-            <Text style={[styles.ghostText, { color: t.ink }]}>단어 찾기</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => push({ name: 'study', review: true })}
-            style={[styles.ghost, { borderColor: t.line }]}
-            accessibilityRole="button"
-          >
-            <Text style={[styles.ghostText, { color: t.ink }]}>외운 단어 복습</Text>
-          </Pressable>
-        </View>
+        <Text style={[styles.section, { color: t.muted }]}>복습</Text>
+        <Group t={t}>
+          <Row t={t} label="외운 단어 복습" count={done.size} onPress={() => push({ name: 'study', mode: 'review' })} />
+          <Row
+            t={t}
+            label="어려운 단어 복습"
+            hint={`${HARD_MIN}번 이상 헤맨 단어`}
+            count={hardCount}
+            onPress={() => push({ name: 'study', mode: 'hard' })}
+          />
+          <Row t={t} label="단어 찾기" onPress={() => push({ name: 'search' })} />
+        </Group>
 
         <Text style={[styles.note, { color: t.muted }]}>
-          진도는 이 휴대폰에만 저장됩니다. 앱을 지우거나 다른 기기에서는 처음부터 시작해요.{'\n'}
-          출처: Paul Nation BNC/COCA 1k~3k 목록.
+          진도는 이 휴대폰에만 저장돼요 · 출처: Paul Nation BNC/COCA 1k~3k
         </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// 여러 줄을 한 상자에 담고, 줄 사이에 가는 선을 넣는다
+function Group({ t, children }: { t: Theme; children: ReactNode[] }) {
+  return (
+    <View style={[styles.group, { backgroundColor: t.surface, borderColor: t.line }]}>
+      {children.map((child, i) => (
+        <Fragment key={i}>
+          {i > 0 && <View style={[styles.sep, { backgroundColor: t.line }]} />}
+          {child}
+        </Fragment>
+      ))}
+    </View>
+  );
+}
+
+function Row({
+  t,
+  label,
+  hint,
+  count,
+  onPress,
+  children,
+}: {
+  t: Theme;
+  label: string;
+  hint?: string;
+  count?: number;
+  onPress?: () => void;
+  children?: ReactNode;
+}) {
+  const body = (
+    <>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.rowLabel, { color: t.ink }]}>{label}</Text>
+        {hint && <Text style={[styles.rowHint, { color: t.muted }]}>{hint}</Text>}
+      </View>
+      {children}
+      {count !== undefined && <Text style={[styles.rowCount, { color: t.muted }]}>{count.toLocaleString()}개</Text>}
+      {onPress && <Text style={[styles.chevron, { color: t.muted }]}>›</Text>}
+    </>
+  );
+  if (!onPress) return <View style={styles.row}>{body}</View>;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.bg }]}
+    >
+      {body}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 32, maxWidth: 480, width: '100%', alignSelf: 'center' },
-  title: { fontFamily: fonts.serif, fontSize: 44, lineHeight: 50, letterSpacing: -0.8, marginTop: 18, marginBottom: 6 },
-  sub: { fontSize: 14, lineHeight: 21, marginBottom: 26 },
-  band: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 16,
-  },
-  k: { fontFamily: fonts.serif, fontSize: 30, width: 64 },
-  name: { fontWeight: '700', fontSize: 15 },
-  meta: { fontSize: 13, marginTop: 3 },
-  bar: { height: 6, borderRadius: 3, marginTop: 9, overflow: 'hidden' },
+  wrap: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40, maxWidth: 480, width: '100%', alignSelf: 'center' },
+  title: { fontFamily: fonts.serif, fontSize: 40, lineHeight: 46, letterSpacing: -0.8, marginTop: 8 },
+  sub: { fontSize: 14, lineHeight: 20, marginTop: 4, marginBottom: 24 },
+  band: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, borderRadius: 18, padding: 16 },
+  k: { fontFamily: fonts.serif, fontSize: 28, lineHeight: 34, width: 48 },
+  bandTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  name: { fontWeight: '700', fontSize: 16, lineHeight: 22 },
+  progress: { fontSize: 13, lineHeight: 18, fontVariant: ['tabular-nums'] },
+  bar: { height: 6, borderRadius: 3, marginTop: 10, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 3 },
-  go: { fontSize: 13, fontWeight: '700' },
-  opts: { marginTop: 22, gap: 10 },
-  opt: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  optLabel: { fontSize: 14 },
-  linkRow: { marginTop: 24, flexDirection: 'row', gap: 10 },
-  ghost: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 13, alignItems: 'center' },
-  ghostText: { fontSize: 14, fontWeight: '500' },
-  note: { fontSize: 12, lineHeight: 19, marginTop: 22 },
+  section: { fontSize: 13, lineHeight: 18, fontWeight: '700', marginTop: 28, marginBottom: 8, marginLeft: 4 },
+  group: { borderWidth: 1, borderRadius: 18, overflow: 'hidden' },
+  sep: { height: 1, marginLeft: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16 },
+  rowLabel: { fontSize: 15, lineHeight: 21 },
+  rowHint: { fontSize: 12, lineHeight: 16, marginTop: 2 },
+  rowCount: { fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
+  chevron: { fontSize: 20, lineHeight: 22, marginLeft: -4 },
+  note: { fontSize: 12, lineHeight: 18, marginTop: 24, textAlign: 'center' },
 });

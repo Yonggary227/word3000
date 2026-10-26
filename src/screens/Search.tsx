@@ -1,13 +1,13 @@
 import { memo, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNav } from '@/lib/nav';
-import { useStore } from '@/lib/store';
+import { HARD_MIN, useStore } from '@/lib/store';
 import { useTheme, type Theme } from '@/lib/theme';
 import { WORDS, type Word } from '@/lib/words';
 
-type Filter = 'all' | '1' | '2' | '3' | 'done';
+type Filter = 'all' | '1' | '2' | '3' | 'done' | 'hard';
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -15,11 +15,12 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: '2', label: '2k' },
   { value: '3', label: '3k' },
   { value: 'done', label: '외운 것' },
+  { value: 'hard', label: '많이 헤맨 것' },
 ];
 
 export default function Search() {
   const t = useTheme();
-  const { done, setDone } = useStore();
+  const { done, misses, setDone } = useStore();
   const { back } = useNav();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -29,13 +30,20 @@ export default function Search() {
     const q = query.trim().toLowerCase();
     const r = WORDS.filter(
       (w) =>
-        (filter === 'all' || (filter === 'done' ? done.has(w.id) : w.band === Number(filter))) &&
+        (filter === 'all' ||
+          (filter === 'done'
+            ? done.has(w.id)
+            : filter === 'hard'
+              ? (misses[w.id] ?? 0) >= HARD_MIN
+              : w.band === Number(filter))) &&
         (!q || w.word.toLowerCase().includes(q) || w.meaning.includes(q)),
     );
     // 영어 앞글자가 일치하는 단어를 먼저 보여준다 (sort는 같은 그룹 안의 기존 순서를 유지한다)
     if (q) r.sort((a, b) => Number(b.word.toLowerCase().startsWith(q)) - Number(a.word.toLowerCase().startsWith(q)));
+    // '많이 헤맨 것'은 많이 헤맨 순서로
+    else if (filter === 'hard') r.sort((a, b) => (misses[b.id] ?? 0) - (misses[a.id] ?? 0));
     return r;
-  }, [query, filter, done]);
+  }, [query, filter, done, misses]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top', 'left', 'right']}>
@@ -65,7 +73,13 @@ export default function Search() {
           style={[styles.search, { backgroundColor: t.surface, borderColor: t.line, color: t.ink }]}
         />
 
-        <View style={styles.filters}>
+        {/* 필터는 한 줄로 두고, 넘치면 옆으로 밀어서 본다 */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+          contentContainerStyle={styles.filters}
+        >
           {FILTERS.map((f) => {
             const on = f.value === filter;
             return (
@@ -85,12 +99,12 @@ export default function Search() {
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
 
         <FlatList
           data={results}
           keyExtractor={(w) => String(w.id)}
-          extraData={done}
+          extraData={[done, misses]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           initialNumToRender={20}
@@ -99,7 +113,7 @@ export default function Search() {
           contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: t.line }} />}
           renderItem={({ item }) => (
-            <Row word={item} done={done.has(item.id)} onToggle={setDone} t={t} />
+            <Row word={item} done={done.has(item.id)} missCount={misses[item.id] ?? 0} onToggle={setDone} t={t} />
           )}
           ListEmptyComponent={
             <Text style={{ color: t.muted, textAlign: 'center', padding: 24 }}>찾는 단어가 없어요</Text>
@@ -113,11 +127,13 @@ export default function Search() {
 const Row = memo(function Row({
   word,
   done,
+  missCount,
   onToggle,
   t,
 }: {
   word: Word;
   done: boolean;
+  missCount: number;
   onToggle: (id: number, value: boolean) => void;
   t: Theme;
 }) {
@@ -127,6 +143,9 @@ const Row = memo(function Row({
         <Text style={[styles.lw, { color: t.ink }]}>
           {word.word}
           <Text style={[styles.lwBand, { color: t.muted }]}>  {word.band}k</Text>
+          {missCount > 0 && (
+            <Text style={[styles.lwBand, { color: missCount >= HARD_MIN ? t.band[3] : t.muted }]}>  · 헤맨 {missCount}번</Text>
+          )}
         </Text>
         <Text style={[styles.lm, { color: t.muted }]}>{word.meaning}</Text>
       </View>
@@ -153,7 +172,8 @@ const styles = StyleSheet.create({
   iconBtn: { borderWidth: 1, borderRadius: 12, minWidth: 44, height: 44, paddingHorizontal: 12, justifyContent: 'center' },
   count: { fontSize: 14, fontVariant: ['tabular-nums'] },
   search: { borderWidth: 1, borderRadius: 14, paddingVertical: 13, paddingHorizontal: 14, fontSize: 16 },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 12 },
+  filterScroll: { flexGrow: 0, marginVertical: 12 },
+  filters: { flexDirection: 'row', gap: 6 },
   filter: { borderWidth: 1, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
   list: { flex: 1, borderWidth: 1, borderRadius: 16, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14 },
