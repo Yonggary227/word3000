@@ -114,6 +114,8 @@
           <div class="row"><span class="label">순서</span><div class="seg" data-opt="order"><span data-v="shuffle">섞기</span><span data-v="abc">알파벳순</span></div></div>
           <div class="sep"></div>
           <div class="row"><span class="label">먼저 보여줄 면</span><div class="seg" data-opt="front"><span data-v="en">영어</span><span data-v="ko">한글 뜻</span></div></div>
+          <div class="sep" data-push></div>
+          <div class="row" data-push><span class="label">단어 알림<span class="hint">9시~22시 매 정각</span></span><div class="seg" data-opt="notify"><span data-v="off">끔</span><span data-v="on">켬</span></div></div>
         </div>
         <p class="section">복습</p>
         <div class="group">
@@ -144,7 +146,12 @@
         var hard = Object.keys(misses).filter(function (k) { return misses[k] >= 5; }).length;
         document.querySelector('[data-count="done"]').textContent = done.length.toLocaleString() + '개';
         document.querySelector('[data-count="hard"]').textContent = hard.toLocaleString() + '개';
-        var opts = { scope: st.scope === 'all' ? 'all' : 'left', order: st.order === 'abc' ? 'abc' : 'shuffle', front: st.front === 'ko' ? 'ko' : 'en' };
+        // 단어 알림 줄은 알림을 받을 수 있는 곳(홈 화면 웹앱 등)에서만 보인다 (src/lib/push.ts의 pushSupported와 같은 조건)
+        var canPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.pathname.indexOf('/word3000') === 0;
+        if (!canPush) document.querySelectorAll('[data-push]').forEach(function (el) { el.remove(); });
+        var notify = 'off';
+        try { notify = localStorage.getItem('w3000.notify') === 'on' ? 'on' : 'off'; } catch (e) {}
+        var opts = { scope: st.scope === 'all' ? 'all' : 'left', order: st.order === 'abc' ? 'abc' : 'shuffle', front: st.front === 'ko' ? 'ko' : 'en', notify: notify };
         Object.keys(opts).forEach(function (k) {
           var on = document.querySelector('[data-opt="' + k + '"] [data-v="' + opts[k] + '"]');
           if (on) on.className = 'on';

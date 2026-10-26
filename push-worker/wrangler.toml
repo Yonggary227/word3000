@@ -1,0 +1,18 @@
+# 단어 3000 알림 서버. 배포: push-worker 폴더에서 `npx wrangler@4 deploy`
+name = "word3000-push"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+VAPID_PUBLIC = "BM0To3rCGYea5fMa0oQq_UJosT3HaFOWaH6WivO-eojs1I3uxlVD6mvQusVxdGbIv3rVEZHv23K9eQogPcL0oEQ"
+VAPID_SUBJECT = "https://yonggary227.github.io/word3000/"
+# VAPID_PRIVATE_JWK 는 비밀값이라 여기 적지 않고 `wrangler secret put`으로 넣었다
+
+[[kv_namespaces]]
+binding = "SUBS"
+id = "a56a90dc426f4fe89397846b214e3d52"
+
+# 한국 시간 9시~22시 매 정각 = UTC 0시~13시
+[triggers]
+crons = ["0 0-13 * * *"]

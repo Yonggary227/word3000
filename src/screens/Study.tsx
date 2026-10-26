@@ -34,9 +34,18 @@ function speak(text: string) {
   Speech.speak(text, { language: 'en-US', rate: 0.9 });
 }
 
-export type StudyMode = 'band' | 'review' | 'hard';
+// single: 단어 알림을 눌러 연 그 단어 한 장
+export type StudyMode = 'band' | 'review' | 'hard' | 'single';
 
-export default function Study({ band: bandProp, mode = 'band' }: { band?: Band; mode?: StudyMode }) {
+export default function Study({
+  band: bandProp,
+  mode = 'band',
+  wordId,
+}: {
+  band?: Band;
+  mode?: StudyMode;
+  wordId?: number;
+}) {
   const t = useTheme();
   const { height, width } = useWindowDimensions();
   // 카드 너비의 약 1/3 이상 밀어야 넘어간다 (조금 밀다 놓으면 제자리로)
@@ -47,6 +56,7 @@ export default function Study({ band: bandProp, mode = 'band' }: { band?: Band; 
   const { done, misses, options, setDone, addMiss } = useStore();
 
   const buildDeck = () => {
+    if (mode === 'single') return wordId && WORD_BY_ID.has(wordId) ? [wordId] : [];
     if (mode === 'hard') {
       // 많이 헤맨 단어부터
       return WORDS.filter((w) => (misses[w.id] ?? 0) >= HARD_MIN)
@@ -149,10 +159,10 @@ export default function Study({ band: bandProp, mode = 'band' }: { band?: Band; 
 
   // 구간 학습은 구간 색, 어려운 단어는 단어마다 원래 구간 색, 복습은 기본 색
   const color =
-    mode === 'band' ? t.band[band as Band] : mode === 'hard' && current ? t.band[current.band] : t.accent;
+    mode === 'band' ? t.band[band as Band] : mode !== 'review' && current ? t.band[current.band] : t.accent;
   const chipBg = mode === 'band' ? t.band[band as Band] : t.accent;
   const chipText = mode === 'band' ? t.onBand : t.onAccent;
-  const chipLabel = mode === 'band' ? `${band}k` : review ? '복습' : '어려운 단어';
+  const chipLabel = { band: `${band}k`, review: '복습', hard: '어려운 단어', single: '알림 단어' }[mode];
   const cardHeight = Math.max(330, Math.min(height * 0.58, 440));
 
   return (
@@ -427,11 +437,13 @@ function Finished({
     band: [`${band}k 완료`, "이 구간 1,000단어를 모두 외웠어요.\n'보여줄 단어'를 전체로 바꾸면 다시 볼 수 있어요."],
     review: ['아직 외운 단어가 없어요', "카드에서 '외웠어요'를 누른 단어가 여기 모입니다."],
     hard: ['어려운 단어가 없어요', `'다시 볼게요'를 ${HARD_MIN}번 이상 누른 단어가 여기 모입니다.`],
+    single: ['단어를 찾지 못했어요', '처음 화면에서 공부를 이어가세요.'],
   }[mode];
   const lap = {
     band: `남은 단어 ${left.toLocaleString()}개`,
     review: '외운 단어를 모두 훑어봤어요.',
     hard: '어려운 단어를 모두 훑어봤어요.',
+    single: '다음 알림에서 또 만나요.',
   }[mode];
   const [title, body] = deckLength === 0 ? empty : ['한 바퀴 끝', lap];
   const canContinue = deckLength > 0 && left > 0 && mode === 'band';

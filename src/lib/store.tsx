@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { shareStateWithWorker } from './push';
+
 // 프로토타입과 같은 키·구조에 헤맨 횟수(misses: { 단어 id: 횟수 })를 더했다
 const KEY = 'w3000.v1';
 
@@ -56,6 +58,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!loaded) return;
     AsyncStorage.setItem(KEY, JSON.stringify({ done: [...done], misses, ...options })).catch(() => {});
   }, [loaded, done, misses, options]);
+
+  useEffect(() => {
+    if (loaded) shareStateWithWorker(done, misses);
+  }, [loaded, done, misses]);
 
   const setDone = useCallback((id: number, value: boolean) => {
     setDoneState((prev) => {

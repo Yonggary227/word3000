@@ -28,6 +28,10 @@ writeFileSync(
   readFileSync(indexPath, 'utf8').replace('</head>', `${fontLinks}<style>${fontFaces}</style></head>`),
 );
 
+// 매시간 단어 알림용 가벼운 단어 목록: [id, 영어, 뜻]
+const words = JSON.parse(readFileSync(join(root, 'src', 'data', 'words.json'), 'utf8'));
+writeFileSync(join(dist, 'words-mini.json'), JSON.stringify(words.map((w) => [w.id, w.word, w.meaning])));
+
 // 주소에 없는 페이지(/word3000/study 등)를 새로고침해도 앱이 열리도록
 copyFileSync(indexPath, join(dist, '404.html'));
 // GitHub Pages가 밑줄(_expo) 폴더를 숨기지 않도록

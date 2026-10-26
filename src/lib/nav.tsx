@@ -3,11 +3,24 @@ import { BackHandler, Platform } from 'react-native';
 
 import type { Band } from './words';
 
+const isWeb = Platform.OS === 'web';
+
 // 화면이 3개뿐이라 화면 이동 도구(Expo Router) 대신 "지금 보는 화면 목록"을 직접 관리한다
 export type Route =
   | { name: 'home' }
-  | { name: 'study'; band?: Band; mode?: 'band' | 'review' | 'hard' }
+  | { name: 'study'; band?: Band; mode?: 'band' | 'review' | 'hard' | 'single'; wordId?: number }
   | { name: 'search' };
+
+// 웹: 단어 알림을 눌러 열면 주소가 /word3000/?word=123 이다. 그 단어 카드부터 보여주고 주소는 깨끗하게 되돌린다.
+function initialStack(): Route[] {
+  const home: Route = { name: 'home' };
+  if (!isWeb || typeof location === 'undefined') return [home];
+  const id = Number(new URLSearchParams(location.search).get('word'));
+  if (!Number.isInteger(id) || id < 1 || id > 3000) return [home];
+  window.history.replaceState(null, '', location.pathname);
+  window.history.pushState(null, '');
+  return [home, { name: 'study', mode: 'single', wordId: id }];
+}
 
 type Nav = {
   route: Route;
@@ -17,10 +30,9 @@ type Nav = {
 };
 
 const NavContext = createContext<Nav | null>(null);
-const isWeb = Platform.OS === 'web';
 
 export function NavProvider({ children }: { children: ReactNode }) {
-  const [stack, setStack] = useState<Route[]>([{ name: 'home' }]);
+  const [stack, setStack] = useState<Route[]>(initialStack);
 
   const pop = useCallback(() => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)), []);
 

@@ -1,9 +1,11 @@
-import { Fragment, type ReactNode } from 'react';
+import { Children, Fragment, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PushToggle } from '@/components/PushToggle';
 import { Seg } from '@/components/Seg';
 import { useNav } from '@/lib/nav';
+import { pushSupported } from '@/lib/push';
 import { HARD_MIN, useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
 import { BANDS, WORDS } from '@/lib/words';
@@ -87,6 +89,11 @@ export default function Home() {
               ]}
             />
           </Row>
+          {pushSupported() && (
+            <Row t={t} label="단어 알림" hint="9시~22시 매 정각">
+              <PushToggle />
+            </Row>
+          )}
         </Group>
 
         <Text style={[styles.section, { color: t.muted }]}>복습</Text>
@@ -111,10 +118,11 @@ export default function Home() {
 }
 
 // 여러 줄을 한 상자에 담고, 줄 사이에 가는 선을 넣는다
-function Group({ t, children }: { t: Theme; children: ReactNode[] }) {
+function Group({ t, children }: { t: Theme; children: ReactNode }) {
+  // toArray는 조건부로 빠진 줄(false)을 걸러 준다
   return (
     <View style={[styles.group, { backgroundColor: t.surface, borderColor: t.line }]}>
-      {children.map((child, i) => (
+      {Children.toArray(children).map((child, i) => (
         <Fragment key={i}>
           {i > 0 && <View style={[styles.sep, { backgroundColor: t.line }]} />}
           {child}
