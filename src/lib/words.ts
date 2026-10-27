@@ -10,7 +10,11 @@ export type Word = {
   example: string;
   // 예문의 한글 뜻
   exampleKo: string;
+  // 뜻이 여러 개이고 서로 정말 다를 때만 있다: 뜻마다 예문 하나씩 (certain: 확실한 / 어떤)
+  senses?: Sense[];
 };
+
+export type Sense = { meaning: string; example: string; exampleKo: string };
 
 export const WORDS = raw as Word[];
 

@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNav } from '@/lib/nav';
 import { HARD_MIN, useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
-import { WORD_BY_ID, WORDS, type Band, type Word } from '@/lib/words';
+import { WORD_BY_ID, WORDS, type Band, type Sense, type Word } from '@/lib/words';
 
 const NO_LIGATURES: TextStyle['fontVariant'] = ['no-common-ligatures', 'no-discretionary-ligatures'];
 
@@ -396,7 +396,42 @@ function KoreanFront({ word, done, t, width }: CardProps & { done: boolean }) {
   );
 }
 
+// 뜻이 여러 개인 단어: 뜻마다 예문과 한글 뜻. 예문을 누르면 읽어준다.
+function Senses({ senses, t }: { senses: Sense[]; t: Theme }) {
+  return (
+    <View style={styles.senses}>
+      {senses.map((s, i) => (
+        <View key={i} style={[styles.sense, i > 0 && { borderTopWidth: 1, borderTopColor: t.line }]}>
+          <View style={styles.senseHead}>
+            <Text style={[styles.senseNo, { color: t.muted }]}>{'①②③'[i]}</Text>
+            <Text style={[styles.senseMean, { color: t.ink }]}>{s.meaning}</Text>
+          </View>
+          <Pressable
+            onPress={() => speak(s.example)}
+            accessibilityRole="button"
+            accessibilityLabel={`예문 듣기: ${s.example}`}
+            hitSlop={4}
+          >
+            <Text style={[styles.senseEx, { color: t.ink }]}>
+              {s.example} <Text style={styles.senseSay}>🔊</Text>
+            </Text>
+          </Pressable>
+          <Text style={[styles.senseKo, { color: t.muted }]}>{s.exampleKo}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function EnglishBack({ word, t, width }: CardProps) {
+  if (word.senses) {
+    return (
+      <>
+        <Text style={[styles.wSmall, { color: t.muted }]}>{word.word}</Text>
+        <Senses senses={word.senses} t={t} />
+      </>
+    );
+  }
   return (
     <>
       <Text style={[styles.wSmall, { color: t.muted }]}>{word.word}</Text>
@@ -411,6 +446,19 @@ function EnglishBack({ word, t, width }: CardProps) {
 }
 
 function KoreanBack({ word, t, width }: CardProps) {
+  // 뜻이 여러 개면 뜻·예문이 길어지므로 단어를 작게 하고 발음 버튼을 단어 옆에 붙인다
+  if (word.senses) {
+    return (
+      <>
+        <Pressable onPress={() => speak(word.word)} accessibilityRole="button" accessibilityLabel="발음 듣기" hitSlop={6}>
+          <Text style={[styles.word, { color: t.ink, fontSize: 34, lineHeight: 44 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
+            {word.word} <Text style={{ fontSize: 16 }}>🔊</Text>
+          </Text>
+        </Pressable>
+        <Senses senses={word.senses} t={t} />
+      </>
+    );
+  }
   const size = Math.min(54, Math.max(36, width * 0.11));
   return (
     <>
@@ -575,5 +623,13 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 10 },
   emptyTitle: { fontFamily: fonts.serif, fontSize: 30, marginBottom: 10, textAlign: 'center' },
   emptyBody: { fontSize: 15, lineHeight: 24, marginBottom: 22, textAlign: 'center' },
+  senses: { alignSelf: 'stretch', marginTop: 12 },
+  sense: { paddingVertical: 8 },
+  senseHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  senseNo: { fontSize: 15, lineHeight: 22 },
+  senseMean: { fontSize: 18, lineHeight: 24, fontWeight: '700', flexShrink: 1 },
+  senseEx: { fontFamily: fonts.serifSemi, fontSize: 17, lineHeight: 24, marginTop: 4, fontVariant: NO_LIGATURES },
+  senseSay: { fontSize: 13 },
+  senseKo: { fontSize: 13, lineHeight: 19, marginTop: 2 },
   resultWord: { fontFamily: fonts.serif, fontSize: 40, lineHeight: 54, marginTop: 6, fontVariant: NO_LIGATURES },
 });
