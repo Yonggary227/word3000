@@ -25,7 +25,11 @@ function initialStack(): Route[] {
 type Nav = {
   route: Route;
   depth: number;
+  // 화면을 새로 그려야 할 때마다 바뀌는 값 (같은 깊이에서 화면을 바꿔 끼운 경우 포함)
+  screenKey: string;
   push: (route: Route) => void;
+  // 지금 화면을 다른 화면으로 바꿔 끼운다 (뒤로 가면 그 이전 화면으로)
+  replace: (route: Route) => void;
   back: () => void;
 };
 
@@ -33,6 +37,7 @@ const NavContext = createContext<Nav | null>(null);
 
 export function NavProvider({ children }: { children: ReactNode }) {
   const [stack, setStack] = useState<Route[]>(initialStack);
+  const [replaced, setReplaced] = useState(0);
 
   const pop = useCallback(() => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)), []);
 
@@ -59,14 +64,26 @@ export function NavProvider({ children }: { children: ReactNode }) {
     setStack((s) => [...s, route]);
   }, []);
 
+  const replace = useCallback((route: Route) => {
+    setStack((s) => [...s.slice(0, -1), route]);
+    setReplaced((n) => n + 1);
+  }, []);
+
   const back = useCallback(() => {
     if (isWeb) window.history.back();
     else pop();
   }, [pop]);
 
   const value = useMemo(
-    () => ({ route: stack[stack.length - 1], depth: stack.length, push, back }),
-    [stack, push, back],
+    () => ({
+      route: stack[stack.length - 1],
+      depth: stack.length,
+      screenKey: `${stack.length}-${replaced}`,
+      push,
+      replace,
+      back,
+    }),
+    [stack, replaced, push, replace, back],
   );
 
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>;

@@ -52,7 +52,7 @@ export default function Study({
   const swipeDistance = Math.max(110, Math.min(width, 480) * 0.33);
   const review = mode === 'review';
   const band: Band | 0 = mode === 'band' ? (bandProp ?? 1) : 0;
-  const { back } = useNav();
+  const { back, replace } = useNav();
   const { done, misses, options, setDone, addMiss } = useStore();
 
   const buildDeck = () => {
@@ -93,16 +93,23 @@ export default function Study({
     showCard(pos + 1);
   };
 
+  // 알림 단어(한 장)에서 무엇을 눌렀는지: 끝난 화면에 결과로 보여준다
+  const [singleResult, setSingleResult] = useState<'know' | 'again' | null>(null);
+
   const know = () => {
     if (!current) return;
     setDone(current.id, true);
+    if (mode === 'single') setSingleResult('know');
     next();
   };
 
   const again = () => {
     if (!current) return;
     addMiss(current.id);
-    if (review) {
+    if (mode === 'single') {
+      // 한 장뿐이라 뒤에 끼워 넣으면 같은 카드가 바로 다시 나온다. 기록만 하고 결과 화면으로 간다.
+      setSingleResult('again');
+    } else if (review) {
       setDone(current.id, false);
     } else {
       // 지금 위치에서 5~9장 뒤에 다시 끼워 넣는다
@@ -267,6 +274,15 @@ export default function Study({
               </Pressable>
             </View>
           </>
+        ) : mode === 'single' && deck.length > 0 ? (
+          <SingleResult
+            t={t}
+            word={WORD_BY_ID.get(deck[0])!}
+            result={singleResult}
+            missCount={misses[deck[0]] ?? 0}
+            onContinue={(b) => replace({ name: 'study', band: b })}
+            onHome={back}
+          />
         ) : (
           <Finished
             t={t}
@@ -416,6 +432,54 @@ function KoreanBack({ word, t, width }: CardProps) {
   );
 }
 
+// 알림 단어 카드에서 버튼을 누른 뒤: 무엇이 저장됐는지 보여주고 이어서 공부할 곳을 고르게 한다
+function SingleResult({
+  t,
+  word,
+  result,
+  missCount,
+  onContinue,
+  onHome,
+}: {
+  t: Theme;
+  word: Word;
+  result: 'know' | 'again' | null;
+  missCount: number;
+  onContinue: (band: Band) => void;
+  onHome: () => void;
+}) {
+  const title =
+    result === 'know' ? '외운 단어로 저장했어요' : result === 'again' ? '다시 볼 단어로 기록했어요' : '다음에 다시 만나요';
+  const note =
+    result === 'know'
+      ? '이제 알림과 카드에 잘 나오지 않아요.'
+      : result === 'again'
+        ? `지금까지 ${missCount}번 헤맸어요. 알림에 더 자주 나와요.`
+        : '외운 단어로 저장하지 않았어요.';
+  return (
+    <View style={styles.empty}>
+      <Text style={[styles.emptyTitle, { color: t.ink }]}>{title}</Text>
+      <Text style={[styles.resultWord, { color: t.band[word.band] }]}>{word.word}</Text>
+      <Text style={[styles.emptyBody, { color: t.muted, marginBottom: 6 }]}>{word.meaning}</Text>
+      <Text style={[styles.emptyBody, { color: t.muted }]}>{note}</Text>
+      <Pressable
+        onPress={() => onContinue(word.band)}
+        style={[styles.big, { backgroundColor: t.accent, alignSelf: 'stretch', flex: 0 }]}
+        accessibilityRole="button"
+      >
+        <Text style={[styles.bigText, { color: t.onAccent }]}>{word.band}k 이어서 공부하기</Text>
+      </Pressable>
+      <Pressable
+        onPress={onHome}
+        style={[styles.big, { borderColor: t.line, borderWidth: 1, alignSelf: 'stretch', flex: 0, marginTop: 10 }]}
+        accessibilityRole="button"
+      >
+        <Text style={[styles.bigText, { color: t.ink }]}>처음 화면으로</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function Finished({
   t,
   mode,
@@ -511,4 +575,5 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 10 },
   emptyTitle: { fontFamily: fonts.serif, fontSize: 30, marginBottom: 10, textAlign: 'center' },
   emptyBody: { fontSize: 15, lineHeight: 24, marginBottom: 22, textAlign: 'center' },
+  resultWord: { fontFamily: fonts.serif, fontSize: 40, lineHeight: 54, marginTop: 6, fontVariant: NO_LIGATURES },
 });

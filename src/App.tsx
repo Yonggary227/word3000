@@ -18,11 +18,11 @@ import Study from '@/screens/Study';
 SplashScreen.preventAutoHideAsync();
 
 function Screen() {
-  const { route, depth } = useNav();
-  // depth를 key로 써서, 같은 화면이라도 새로 열면 처음부터 다시 그린다
-  if (route.name === 'study') return <Study key={depth} band={route.band} mode={route.mode} wordId={route.wordId} />;
-  if (route.name === 'search') return <Search key={depth} />;
-  return <Home key={depth} />;
+  const { route, screenKey } = useNav();
+  // screenKey를 key로 써서, 같은 화면이라도 새로 열면 처음부터 다시 그린다
+  if (route.name === 'study') return <Study key={screenKey} band={route.band} mode={route.mode} wordId={route.wordId} />;
+  if (route.name === 'search') return <Search key={screenKey} />;
+  return <Home key={screenKey} />;
 }
 
 function Root() {
