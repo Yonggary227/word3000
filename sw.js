@@ -1,0 +1,101 @@
+// 오프라인용 서비스 워커. build-web.mjs가 VERSION과 FILES를 채워 dist/sw.js로 만든다.
+const VERSION = '525bb3d0e037';
+const FILES = ["_expo/static/js/web/index-fd59e954ff0e7216452e8e88ac036e90.js","apple-touch-icon.png","assets/node_modules/@expo-google-fonts/fraunces/600SemiBold/Fraunces_600SemiBold.e995588822b0867215ce518a9a79175b.ttf","assets/node_modules/@expo-google-fonts/fraunces/700Bold/Fraunces_700Bold.0c859ce19af0584bccfc6941addedf34.ttf","favicon.ico","icon-192.png","icon-512.png","index.html","manifest.json","metadata.json","words-mini.json"];
+const BASE = '/word3000/';
+const CACHE = 'w3000-' + VERSION;
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(FILES.map((f) => BASE + f)))
+      .then(() => self.skipWaiting()),
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      // 예전 버전의 앱 파일만 지운다 (진도를 담은 'word3000-state'는 남긴다)
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('w3000-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+
+  // 화면 이동(/word3000/study 등)은 모두 같은 index.html로 연다
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      caches.match(BASE + 'index.html').then((cached) => cached || fetch(req)),
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(req, { ignoreSearch: true }).then((cached) => cached || fetch(req)),
+  );
+});
+
+// ---- 매시간 단어 알림 ----
+// 알림 서버(push-worker)는 내용 없이 "종"만 울린다. 여기서 안 외운 단어 하나를 골라 보여준다.
+self.addEventListener('push', (event) => {
+  event.waitUntil(showWord());
+});
+
+async function showWord() {
+  // words-mini.json: [id, 영어, 뜻] 목록 (build-web.mjs가 만든다)
+  const wordsRes = (await caches.match(BASE + 'words-mini.json')) || (await fetch(BASE + 'words-mini.json'));
+  const words = await wordsRes.json();
+  let state = { done: [], misses: {} };
+  try {
+    const saved = await caches.match(BASE + '__state');
+    if (saved) state = await saved.json();
+  } catch (e) {}
+
+  const done = new Set(state.done || []);
+  const misses = state.misses || {};
+  // 지금 공부 중인 구간(1k=id 1~1000, 2k=1001~2000, 3k=2001~3000)의 안 외운 단어에서 고른다.
+  // 그 구간을 다 외웠으면 전체의 안 외운 단어, 그것도 없으면 전체에서.
+  const band = [1, 2, 3].includes(state.lastBand) ? state.lastBand : 1;
+  const left = words.filter((w) => !done.has(w[0]));
+  let pool = left.filter((w) => Math.ceil(w[0] / 1000) === band);
+  if (pool.length === 0) pool = left;
+  if (pool.length === 0) pool = words;
+
+  // 많이 헤맨 단어일수록 더 자주 나오게: 기본 1 + 헤맨 횟수(최대 10)
+  const weight = (w) => 1 + Math.min(misses[w[0]] || 0, 10);
+  let r = Math.random() * pool.reduce((sum, w) => sum + weight(w), 0);
+  let pick = pool[pool.length - 1];
+  for (const w of pool) {
+    r -= weight(w);
+    if (r <= 0) {
+      pick = w;
+      break;
+    }
+  }
+
+  await self.registration.showNotification(pick[1], {
+    body: pick[2],
+    tag: 'w3000-word', // 새 알림이 오면 이전 단어 알림을 바꿔치기해서 쌓이지 않게
+    renotify: true,
+    icon: BASE + 'icon-192.png',
+    data: { id: pick[0] },
+  });
+}
+
+// 알림을 누르면 그 단어 카드를 연다
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = BASE + '?word=' + event.notification.data.id;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => new URL(c.url).pathname.startsWith(BASE));
+      if (open) return open.navigate(url).then((c) => (c || open).focus());
+      return self.clients.openWindow(url);
+    }),
+  );
+});

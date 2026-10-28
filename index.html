@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <title>단어 3000</title>
+    <!-- 홈 화면에 추가했을 때 앱처럼 보이게 하는 설정 (주소는 GitHub Pages의 /word3000 기준) -->
+    <link rel="manifest" href="/word3000/manifest.json" />
+    <link rel="apple-touch-icon" href="/word3000/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="단어 3000" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#E6EBF1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#10161F" media="(prefers-color-scheme: dark)" />
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+        background-color: #E6EBF1;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #10161F;
+        }
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+
+      /* 앱 코드를 읽는 동안 보여줄 "미리 그린 첫 화면" (src/screens/Home.tsx와 같은 모양) */
+      #boot {
+        --bg: #E6EBF1; --surface: #FFFFFF; --ink: #18263F; --muted: #66748A; --line: #D3DAE4;
+        --b1: #2F8A63; --b2: #C2821A; --b3: #BF4B3A; --accent: #18263F; --onaccent: #FFFFFF;
+        position: fixed; inset: 0; z-index: 10; overflow: hidden; background: var(--bg); color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+        -webkit-text-size-adjust: 100%;
+      }
+      @media (prefers-color-scheme: dark) {
+        #boot {
+          --bg: #10161F; --surface: #1A2330; --ink: #E7ECF3; --muted: #93A0B3; --line: #2A3544;
+          --b1: #5BC497; --b2: #E2A94A; --b3: #E5786A; --accent: #E7ECF3; --onaccent: #10161F;
+        }
+      }
+      #boot * { box-sizing: border-box; margin: 0; }
+      #boot .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px 40px; }
+      #boot .serif { font-family: Fraunces_700Bold, Georgia, serif; font-weight: normal; }
+      #boot .title { font-size: 40px; line-height: 46px; letter-spacing: -0.8px; margin-top: 8px; }
+      #boot .sub { font-size: 14px; line-height: 20px; color: var(--muted); margin: 4px 0 24px; }
+      #boot .bands { display: flex; flex-direction: column; gap: 10px; }
+      #boot .band { display: flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 18px; padding: 16px; background: var(--surface); }
+      #boot .k { font-size: 28px; line-height: 34px; width: 48px; flex: none; }
+      #boot .grow { flex: 1; }
+      #boot .top { display: flex; justify-content: space-between; align-items: center; }
+      #boot .name { font-weight: 700; font-size: 16px; line-height: 22px; }
+      #boot .prog { font-size: 13px; line-height: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      #boot .bar { height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden; background: var(--line); }
+      #boot .bar i { display: block; height: 100%; width: 0; border-radius: 3px; }
+      #boot .section { font-size: 13px; line-height: 18px; font-weight: 700; color: var(--muted); margin: 28px 0 8px 4px; }
+      #boot .group { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); }
+      #boot .sep { height: 1px; margin-left: 16px; background: var(--line); }
+      #boot .row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 16px; }
+      #boot .label { flex: 1; font-size: 15px; line-height: 21px; }
+      #boot .hint { display: block; font-size: 12px; line-height: 16px; margin-top: 2px; color: var(--muted); }
+      #boot .count { font-size: 14px; line-height: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      #boot .chev { font-size: 20px; line-height: 22px; margin-left: -4px; color: var(--muted); }
+      #boot .seg { display: flex; border: 1px solid var(--line); border-radius: 12px; padding: 3px; background: var(--surface); }
+      #boot .seg span { padding: 7px 12px; border-radius: 9px; font-size: 13px; color: var(--muted); }
+      #boot .seg span.on { background: var(--accent); color: var(--onaccent); font-weight: 700; }
+      #boot .note { font-size: 12px; line-height: 18px; margin-top: 24px; color: var(--muted); text-align: center; }
+    </style>
+    <script>
+      // 한 번 열면 앱 내용을 휴대폰에 저장해 두고, 다음부터는 인터넷 없이도 열리게 한다.
+      // 첫 화면이 뜨는 데 방해되지 않도록 3초 뒤에 저장을 시작한다.
+      if ('serviceWorker' in navigator && location.pathname.startsWith('/word3000')) {
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            navigator.serviceWorker.register('/word3000/sw.js', { scope: '/word3000/' });
+          }, 3000);
+        });
+      }
+    </script>
+  <link rel="icon" href="/word3000/favicon.ico"/><link rel="preload" href="/word3000/assets/node_modules/@expo-google-fonts/fraunces/600SemiBold/Fraunces_600SemiBold.e995588822b0867215ce518a9a79175b.ttf" as="font" type="font/ttf" crossorigin><link rel="preload" href="/word3000/assets/node_modules/@expo-google-fonts/fraunces/700Bold/Fraunces_700Bold.0c859ce19af0584bccfc6941addedf34.ttf" as="font" type="font/ttf" crossorigin><style>@font-face{font-family:Fraunces_600SemiBold;src:url(/word3000/assets/node_modules/@expo-google-fonts/fraunces/600SemiBold/Fraunces_600SemiBold.e995588822b0867215ce518a9a79175b.ttf) format("truetype");font-display:swap}@font-face{font-family:Fraunces_700Bold;src:url(/word3000/assets/node_modules/@expo-google-fonts/fraunces/700Bold/Fraunces_700Bold.0c859ce19af0584bccfc6941addedf34.ttf) format("truetype");font-display:swap}</style></head>
+
+  <body>
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+    <!-- 미리 그린 첫 화면: 앱이 준비되면 App.tsx가 지운다 -->
+    <div id="boot" aria-hidden="true">
+      <div class="wrap">
+        <h1 class="title serif">단어 3000</h1>
+        <p class="sub">가장 자주 쓰이는 영어 단어 3,000개</p>
+        <div class="bands">
+          <div class="band"><span class="k serif" style="color: var(--b1)">1k</span><div class="grow"><div class="top"><span class="name">기초</span><span class="prog" data-prog="1">0 / 1,000</span></div><div class="bar"><i data-bar="1" style="background: var(--b1)"></i></div></div></div>
+          <div class="band"><span class="k serif" style="color: var(--b2)">2k</span><div class="grow"><div class="top"><span class="name">초급</span><span class="prog" data-prog="2">0 / 1,000</span></div><div class="bar"><i data-bar="2" style="background: var(--b2)"></i></div></div></div>
+          <div class="band"><span class="k serif" style="color: var(--b3)">3k</span><div class="grow"><div class="top"><span class="name">초중급</span><span class="prog" data-prog="3">0 / 1,000</span></div><div class="bar"><i data-bar="3" style="background: var(--b3)"></i></div></div></div>
+        </div>
+        <p class="section">학습 설정</p>
+        <div class="group">
+          <div class="row"><span class="label">보여줄 단어</span><div class="seg" data-opt="scope"><span data-v="left">안 외운 것</span><span data-v="all">전체</span></div></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">순서</span><div class="seg" data-opt="order"><span data-v="shuffle">섞기</span><span data-v="abc">알파벳순</span></div></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">먼저 보여줄 면</span><div class="seg" data-opt="front"><span data-v="en">영어</span><span data-v="ko">한글 뜻</span></div></div>
+          <div class="sep" data-push></div>
+          <div class="row" data-push><span class="label">단어 알림<span class="hint">9시~22시 매 정각</span></span><div class="seg" data-opt="notify"><span data-v="off">끔</span><span data-v="on">켬</span></div></div>
+        </div>
+        <p class="section">복습</p>
+        <div class="group">
+          <div class="row"><span class="label">외운 단어 복습</span><span class="count" data-count="done">0개</span><span class="chev">›</span></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">어려운 단어 복습<span class="hint">5번 이상 헤맨 단어</span></span><span class="count" data-count="hard">0개</span><span class="chev">›</span></div>
+          <div class="sep"></div>
+          <div class="row"><span class="label">단어 찾기</span><span class="chev">›</span></div>
+        </div>
+        <p class="note">진도는 이 휴대폰에만 저장돼요 · 출처: Paul Nation BNC/COCA 1k~3k</p>
+      </div>
+    </div>
+    <script>
+      // 저장된 진도와 옵션을 읽어 미리 그린 화면에도 바로 반영한다 (단어 id: 1k=1~1000, 2k=1001~2000, 3k=2001~3000)
+      (function () {
+        var st = {};
+        try { st = JSON.parse(localStorage.getItem('w3000.v1') || '{}') || {}; } catch (e) {}
+        var done = st.done || [];
+        var counts = { 1: 0, 2: 0, 3: 0 };
+        done.forEach(function (id) { var b = Math.ceil(id / 1000); if (counts[b] !== undefined) counts[b]++; });
+        [1, 2, 3].forEach(function (b) {
+          var p = Math.round((counts[b] / 1000) * 100);
+          document.querySelector('[data-prog="' + b + '"]').textContent = counts[b].toLocaleString() + ' / 1,000';
+          document.querySelector('[data-bar="' + b + '"]').style.width = p + '%';
+        });
+        // 어려운 단어 기준(5번)은 src/lib/store.tsx의 HARD_MIN과 같다
+        var misses = st.misses || {};
+        var hard = Object.keys(misses).filter(function (k) { return misses[k] >= 5; }).length;
+        document.querySelector('[data-count="done"]').textContent = done.length.toLocaleString() + '개';
+        document.querySelector('[data-count="hard"]').textContent = hard.toLocaleString() + '개';
+        // 단어 알림 줄은 알림을 받을 수 있는 곳(홈 화면 웹앱 등)에서만 보인다 (src/lib/push.ts의 pushSupported와 같은 조건)
+        var canPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.pathname.indexOf('/word3000') === 0;
+        if (!canPush) document.querySelectorAll('[data-push]').forEach(function (el) { el.remove(); });
+        var notify = 'off';
+        try { notify = localStorage.getItem('w3000.notify') === 'on' ? 'on' : 'off'; } catch (e) {}
+        var opts = { scope: st.scope === 'all' ? 'all' : 'left', order: st.order === 'abc' ? 'abc' : 'shuffle', front: st.front === 'ko' ? 'ko' : 'en', notify: notify };
+        Object.keys(opts).forEach(function (k) {
+          var on = document.querySelector('[data-opt="' + k + '"] [data-v="' + opts[k] + '"]');
+          if (on) on.className = 'on';
+        });
+      })();
+    </script>
+  <script src="/word3000/_expo/static/js/web/index-fd59e954ff0e7216452e8e88ac036e90.js" defer></script>
+</body>
+</html>
