@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { fitFontSize } from '@/lib/fit';
 import { useNav } from '@/lib/nav';
 import { HARD_MIN, useStore } from '@/lib/store';
 import { fonts, useTheme, type Theme } from '@/lib/theme';
@@ -364,14 +365,19 @@ function DoneMark({ t }: { t: Theme }) {
 
 type CardProps = { word: Word; t: Theme; width: number };
 const wordSize = (width: number) => Math.min(64, Math.max(40, width * 0.13));
+// 카드 안에서 글자가 쓸 수 있는 너비: 화면(최대 480) - 바깥 여백 18×2 - 테두리 1×2 - 카드 안 여백 22×2
+const cardTextWidth = (width: number) => Math.min(width, 480) - 82;
+// 큰 영어 단어 크기: 기본 크기에서 시작해 카드 너비를 넘으면 줄인다
+const bigWordSize = (text: string, size: number, maxWidth: number) => fitFontSize(text, size, maxWidth, fonts.serif, -1);
 const meanSize = (width: number) => Math.min(32, Math.max(24, width * 0.07));
 
 function EnglishFront({ word, done, t, width }: CardProps & { done: boolean }) {
+  const size = bigWordSize(word.word, wordSize(width), cardTextWidth(width));
   return (
     <>
       {done && <DoneMark t={t} />}
       <Text
-        style={[styles.word, { color: t.ink, fontSize: wordSize(width), lineHeight: wordSize(width) * 1.35 }]}
+        style={[styles.word, { color: t.ink, fontSize: size, lineHeight: size * 1.35 }]}
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.5}
@@ -447,11 +453,18 @@ function EnglishBack({ word, t, width }: CardProps) {
 
 function KoreanBack({ word, t, width }: CardProps) {
   // 뜻이 여러 개면 뜻·예문이 길어지므로 단어를 작게 하고 발음 버튼을 단어 옆에 붙인다
+  // 🔊 표시(약 30px)가 단어 옆에 붙으므로 그만큼 뺀다
+  const small = bigWordSize(word.word, 34, cardTextWidth(width) - 30);
   if (word.senses) {
     return (
       <>
         <Pressable onPress={() => speak(word.word)} accessibilityRole="button" accessibilityLabel="발음 듣기" hitSlop={6}>
-          <Text style={[styles.word, { color: t.ink, fontSize: 34, lineHeight: 44 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
+          <Text
+            style={[styles.word, { color: t.ink, fontSize: small, lineHeight: small * 1.3 }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
             {word.word} <Text style={{ fontSize: 16 }}>🔊</Text>
           </Text>
         </Pressable>
@@ -459,7 +472,7 @@ function KoreanBack({ word, t, width }: CardProps) {
       </>
     );
   }
-  const size = Math.min(54, Math.max(36, width * 0.11));
+  const size = bigWordSize(word.word, Math.min(54, Math.max(36, width * 0.11)), cardTextWidth(width));
   return (
     <>
       <Text
@@ -496,6 +509,9 @@ function SingleResult({
   onContinue: (band: Band) => void;
   onHome: () => void;
 }) {
+  const { width } = useWindowDimensions();
+  // 결과 화면은 카드가 아니라 화면 여백(18×2)과 안쪽 여백(10×2)만 뺀 너비를 쓴다
+  const resultSize = bigWordSize(word.word, 40, Math.min(width, 480) - 56);
   const title =
     result === 'know' ? '외운 단어로 저장했어요' : result === 'again' ? '다시 볼 단어로 기록했어요' : '다음에 다시 만나요';
   const note =
@@ -507,7 +523,9 @@ function SingleResult({
   return (
     <View style={styles.empty}>
       <Text style={[styles.emptyTitle, { color: t.ink }]}>{title}</Text>
-      <Text style={[styles.resultWord, { color: t.band[word.band] }]}>{word.word}</Text>
+      <Text style={[styles.resultWord, { color: t.band[word.band], fontSize: resultSize, lineHeight: resultSize * 1.35 }]}>
+        {word.word}
+      </Text>
       <Text style={[styles.emptyBody, { color: t.muted, marginBottom: 6 }]}>{word.meaning}</Text>
       <Text style={[styles.emptyBody, { color: t.muted }]}>{note}</Text>
       <Pressable
