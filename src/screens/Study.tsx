@@ -54,7 +54,12 @@ export default function Study({
   const review = mode === 'review';
   const band: Band | 0 = mode === 'band' ? (bandProp ?? 1) : 0;
   const { back, replace } = useNav();
-  const { done, misses, options, setDone, addMiss } = useStore();
+  const { done, misses, options, setDone, addMiss, setOption } = useStore();
+
+  // 구간 학습을 시작하면 그 구간을 '지금 공부 중인 구간'으로 기억한다
+  useEffect(() => {
+    if (mode === 'band' && bandProp) setOption('lastBand', bandProp);
+  }, [mode, bandProp, setOption]);
 
   const buildDeck = () => {
     if (mode === 'single') return wordId && WORD_BY_ID.has(wordId) ? [wordId] : [];
@@ -281,6 +286,7 @@ export default function Study({
             word={WORD_BY_ID.get(deck[0])!}
             result={singleResult}
             missCount={misses[deck[0]] ?? 0}
+            continueBand={options.lastBand}
             onContinue={(b) => replace({ name: 'study', band: b })}
             onHome={back}
           />
@@ -499,6 +505,7 @@ function SingleResult({
   word,
   result,
   missCount,
+  continueBand,
   onContinue,
   onHome,
 }: {
@@ -506,6 +513,7 @@ function SingleResult({
   word: Word;
   result: 'know' | 'again' | null;
   missCount: number;
+  continueBand: Band;
   onContinue: (band: Band) => void;
   onHome: () => void;
 }) {
@@ -529,11 +537,11 @@ function SingleResult({
       <Text style={[styles.emptyBody, { color: t.muted, marginBottom: 6 }]}>{word.meaning}</Text>
       <Text style={[styles.emptyBody, { color: t.muted }]}>{note}</Text>
       <Pressable
-        onPress={() => onContinue(word.band)}
+        onPress={() => onContinue(continueBand)}
         style={[styles.big, { backgroundColor: t.accent, alignSelf: 'stretch', flex: 0 }]}
         accessibilityRole="button"
       >
-        <Text style={[styles.bigText, { color: t.onAccent }]}>{word.band}k 이어서 공부하기</Text>
+        <Text style={[styles.bigText, { color: t.onAccent }]}>{continueBand}k 이어서 공부하기</Text>
       </Pressable>
       <Pressable
         onPress={onHome}

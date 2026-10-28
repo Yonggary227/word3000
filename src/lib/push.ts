@@ -75,9 +75,9 @@ export async function turnPushOff(): Promise<void> {
 }
 
 // 알림은 앱이 꺼져 있을 때 서비스 워커가 고르므로, 외운 단어·헤맨 횟수를 서비스 워커가 읽을 수 있는 곳에 둔다
-export function shareStateWithWorker(done: Set<number>, misses: Record<number, number>) {
+export function shareStateWithWorker(done: Set<number>, misses: Record<number, number>, lastBand: number) {
   if (Platform.OS !== 'web' || typeof caches === 'undefined') return;
-  const body = JSON.stringify({ done: [...done], misses });
+  const body = JSON.stringify({ done: [...done], misses, lastBand });
   caches
     .open(STATE_CACHE)
     .then((c) => c.put(STATE_URL, new Response(body, { headers: { 'Content-Type': 'application/json' } })))

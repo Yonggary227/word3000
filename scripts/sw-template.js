@@ -58,7 +58,12 @@ async function showWord() {
 
   const done = new Set(state.done || []);
   const misses = state.misses || {};
-  let pool = words.filter((w) => !done.has(w[0]));
+  // 지금 공부 중인 구간(1k=id 1~1000, 2k=1001~2000, 3k=2001~3000)의 안 외운 단어에서 고른다.
+  // 그 구간을 다 외웠으면 전체의 안 외운 단어, 그것도 없으면 전체에서.
+  const band = [1, 2, 3].includes(state.lastBand) ? state.lastBand : 1;
+  const left = words.filter((w) => !done.has(w[0]));
+  let pool = left.filter((w) => Math.ceil(w[0] / 1000) === band);
+  if (pool.length === 0) pool = left;
   if (pool.length === 0) pool = words;
 
   // 많이 헤맨 단어일수록 더 자주 나오게: 기본 1 + 헤맨 횟수(최대 10)

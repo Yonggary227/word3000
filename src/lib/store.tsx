@@ -10,9 +10,11 @@ export type Options = {
   scope: 'left' | 'all';
   order: 'shuffle' | 'abc';
   front: 'en' | 'ko';
+  // 마지막으로 공부한 구간: 알림 단어와 '이어서 공부하기'가 이 구간을 따른다
+  lastBand: 1 | 2 | 3;
 };
 
-const DEFAULT_OPTIONS: Options = { scope: 'left', order: 'shuffle', front: 'en' };
+const DEFAULT_OPTIONS: Options = { scope: 'left', order: 'shuffle', front: 'en', lastBand: 1 };
 
 // 이 횟수 이상 헤맨 단어를 '어려운 단어'로 모아 복습한다
 export const HARD_MIN = 5;
@@ -47,6 +49,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           scope: saved.scope === 'all' ? 'all' : 'left',
           order: saved.order === 'abc' ? 'abc' : 'shuffle',
           front: saved.front === 'ko' ? 'ko' : 'en',
+          lastBand: saved.lastBand === 2 || saved.lastBand === 3 ? saved.lastBand : 1,
         });
       })
       .catch(() => {})
@@ -60,8 +63,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [loaded, done, misses, options]);
 
   useEffect(() => {
-    if (loaded) shareStateWithWorker(done, misses);
-  }, [loaded, done, misses]);
+    if (loaded) shareStateWithWorker(done, misses, options.lastBand);
+  }, [loaded, done, misses, options.lastBand]);
 
   const setDone = useCallback((id: number, value: boolean) => {
     setDoneState((prev) => {
